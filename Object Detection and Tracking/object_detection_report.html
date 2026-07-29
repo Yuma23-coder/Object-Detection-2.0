@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Object Detection and Tracking Report</title>
+  <style>
+:root {
+    color-scheme: dark;
+    color: #e2e8f0;
+    background: #020617;
+    font-family: 'Poppins', sans-serif;
+    --bg: #03081d;
+    --panel: rgba(15, 23, 42, 0.95);
+    --panel-strong: rgba(15, 23, 42, 1);
+    --border: rgba(148, 163, 184, 0.18);
+    --accent: #38bdf8;
+    --accent-2: #8b5cf6;
+    --surface: rgba(15, 23, 42, 0.92);
+    --text-muted: #94a3b8;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    min-height: 100vh;
+    background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 30%),
+                radial-gradient(circle at bottom right, rgba(139, 92, 246, 0.14), transparent 28%),
+                linear-gradient(180deg, #08101f 0%, #020512 100%);
+    color: #e2e8f0;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.12), transparent 25%),
+                radial-gradient(circle at bottom left, rgba(139, 92, 246, 0.12), transparent 22%);
+    pointer-events: none;
+}
+
+.page {
+    width: min(1200px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 32px 0 56px;
+}
+
+.header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 18px;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.brand-mark {
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    font-size: 1.4rem;
+    color: #020617;
+}
+
+.brand-copy h1 {
+    font-size: clamp(1.9rem, 2.7vw, 2.7rem);
+    line-height: 1.05;
+}
+
+.brand-copy p {
+    margin-top: 10px;
+    color: var(--text-muted);
+    max-width: 640px;
+    font-size: 0.98rem;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.button {
+    border: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.8);
+    color: inherit;
+    padding: 0.95rem 1.25rem;
+    border-radius: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.button:hover {
+    transform: translateY(-1px);
+    border-color: rgba(56, 189, 248, 0.45);
+    background: rgba(15, 23, 42, 1);
+}
+
+.hero-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+    margin-bottom: 32px;
+}
+
+.panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    padding: 26px;
+    backdrop-filter: blur(18px);
+    overflow: hidden;
+}
+
+.panel h2 {
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+    color: #f8fafc;
+}
+
+.metric-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.metric {
+    border-radius: 22px;
+    background: rgba(15, 23, 42, 0.7);
+    padding: 18px 20px;
+    border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.metric span {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    margin-bottom: 8px;
+}
+
+.metric strong {
+    font-size: 1.8rem;
+    display: block;
+    color: #edf2f7;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.7rem 1rem;
+    border-radius: 999px;
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 18px;
+}
+
+.grid-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+}
+
+.content-panel {
+    display: grid;
+    gap: 24px;
+}
+
+.content-panel .tab-switcher {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.tab-button {
+    border-radius: 16px;
+    padding: 0.95rem 1rem;
+    border: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.75);
+    color: inherit;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.18s ease, background 0.18s ease;
+}
+
+.tab-button.active,
+.tab-button:hover {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(139, 92, 246, 0.24));
+    border-color: rgba(56, 189, 248, 0.38);
+}
+
+.card-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    padding: 28px;
+}
+
+.card-panel h3 {
+    margin-bottom: 18px;
+    font-size: 1.15rem;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 640px;
+}
+
+thead tr {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+th,
+td {
+    text-align: left;
+    padding: 14px 16px;
+}
+
+th {
+    color: #cbd5e1;
+    font-size: 0.92rem;
+    letter-spacing: 0.01em;
+}
+
+tbody tr {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+tbody tr:last-child {
+    border-bottom: none;
+}
+
+td {
+    color: #e2e8f0;
+    font-size: 0.96rem;
+}
+
+.status-pill {
+    display: inline-flex;
+    padding: 0.45rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(56, 189, 248, 0.14);
+    color: #38bdf8;
+    font-size: 0.86rem;
+    font-weight: 600;
+}
+
+.panel-aside {
+    display: grid;
+    gap: 18px;
+}
+
+.panel-aside .panel {
+    padding: 24px;
+}
+
+.panel-aside h2 {
+    margin-bottom: 16px;
+}
+
+.panel-aside p,
+.panel-aside li {
+    color: var(--text-muted);
+    line-height: 1.8;
+}
+
+@media (max-width: 980px) {
+    .grid-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    .header,
+    .hero-grid,
+    .topbar {
+        grid-template-columns: 1fr;
+    }
+
+    .tab-button {
+        font-size: 0.92rem;
+    }
+}
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div class="brand">
+        <div class="brand-mark">TB</div>
+        <div class="brand-copy">
+          <h1>Object Detection & Tracking Dashboard</h1>
+          <p>Realtime analytics from YOLOv8 with tracked objects, timestamps, and live system metrics.</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="button" type="button" onclick="switchPanel('overview')">Overview</button>
+        <button class="button" type="button" onclick="switchPanel('objects')">Objects</button>
+        <button class="button" type="button" onclick="switchPanel('tracks')">Tracks</button>
+        <button class="button" type="button" onclick="copyReport()">Copy Link</button>
+      </div>
+    </div>
+
+    <div class="hero-grid">
+      <section class="panel">
+        <div class="badge">Live report</div>
+        <h2>Session overview</h2>
+        <div class="metric-grid">
+          <div class="metric">
+            <span>Model</span>
+            <strong>yolov8n.pt</strong>
+          </div>
+          <div class="metric">
+            <span>Active frame</span>
+            <strong>49</strong>
+          </div>
+          <div class="metric">
+            <span>Detected objects</span>
+            <strong>1</strong>
+          </div>
+          <div class="metric">
+            <span>Confirmed tracks</span>
+            <strong>1</strong>
+          </div>
+        </div>
+        <p class="status-pill">Source: 0</p>
+      </section>
+
+      <aside class="panel panel-aside">
+        <h2>Configuration</h2>
+        <ul>
+          <li>Confidence threshold: 0.45</li>
+          <li>IoU threshold: 0.5</li>
+          <li>Frame resolution: 640 × 480</li>
+          <li>Output report: object_detection_report.html</li>
+        </ul>
+      </aside>
+    </div>
+
+    <div class="grid-layout">
+      <div class="content-panel">
+        <div class="tab-switcher">
+          <button class="tab-button active" data-target="overview" onclick="switchPanel('overview')">Overview</button>
+          <button class="tab-button" data-target="objects" onclick="switchPanel('objects')">Objects</button>
+          <button class="tab-button" data-target="tracks" onclick="switchPanel('tracks')">Tracks</button>
+          <button class="tab-button" data-target="history" onclick="switchPanel('history')">History</button>
+        </div>
+
+        <section class="card-panel" data-panel="overview">
+          <h3>Detection Summary</h3>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr><th>Metric</th><th>Value</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Source</td><td>0</td></tr>
+                <tr><td>Model</td><td>yolov8n.pt</td></tr>
+                <tr><td>Confidence threshold</td><td>0.45</td></tr>
+                <tr><td>IoU threshold</td><td>0.5</td></tr>
+                <tr><td>Frame size</td><td>640 × 480</td></tr>
+                <tr><td>Updated</td><td>2026-07-28 23:13:06</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card-panel" data-panel="objects" hidden>
+          <h3>Detected Objects</h3>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr><th>#</th><th>Class</th><th>Confidence</th><th>Location</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>1</td><td>person</td><td>0.68</td><td>(48, 0) to (631, 478)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card-panel" data-panel="tracks" hidden>
+          <h3>Active Tracks</h3>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr><th>Track ID</th><th>Bounding Box</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>1</td><td>(58, 0) to (616, 477)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card-panel" data-panel="history" hidden>
+          <h3>Recent Frame History</h3>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr><th>Frame</th><th>Detections</th><th>Tracks</th><th>Time</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>40</td><td>1</td><td>1</td><td>23:13:02</td></tr><tr><td>41</td><td>1</td><td>1</td><td>23:13:02</td></tr><tr><td>42</td><td>1</td><td>1</td><td>23:13:03</td></tr><tr><td>43</td><td>1</td><td>1</td><td>23:13:04</td></tr><tr><td>44</td><td>0</td><td>0</td><td>23:13:04</td></tr><tr><td>45</td><td>0</td><td>0</td><td>23:13:05</td></tr><tr><td>46</td><td>1</td><td>1</td><td>23:13:05</td></tr><tr><td>47</td><td>1</td><td>1</td><td>23:13:05</td></tr><tr><td>48</td><td>1</td><td>1</td><td>23:13:06</td></tr><tr><td>49</td><td>1</td><td>1</td><td>23:13:06</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <aside class="panel panel-aside">
+        <h2>Notes & next steps</h2>
+        <p>Use the tabs to inspect detected objects, tracking assignments, and recent history. The live report is styled with a modern dashboard layout and client-side interactivity.</p>
+        <ul>
+          <li>Refresh the file in the browser after each update.</li>
+          <li>Click <strong>Copy Link</strong> to share the current report URL.</li>
+          <li>Run the script again to regenerate the report with fresh data.</li>
+        </ul>
+      </aside>
+    </div>
+  </div>
+  <script>
+const panels = document.querySelectorAll('[data-panel]');
+const buttons = document.querySelectorAll('[data-target]');
+
+function switchPanel(target) {
+    panels.forEach(panel => panel.hidden = panel.dataset.panel !== target);
+    buttons.forEach(button => button.classList.toggle('active', button.dataset.target === target));
+}
+
+function copyReport() {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(window.location.href).then(() => alert('Report URL copied to clipboard.'));
+    } else {
+        alert('Copy is not supported in this browser.');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => switchPanel('overview'));
+</script>
+</body>
+</html>
